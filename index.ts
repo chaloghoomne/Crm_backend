@@ -15,7 +15,13 @@ const PORT = process.env.PORT || 5174;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+
+app.options('*', cors());
+
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
