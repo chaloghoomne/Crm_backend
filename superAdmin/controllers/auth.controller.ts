@@ -5,9 +5,9 @@ export const login = async(req:any,res:any)=>{
     try{
         const {email,password} = req.body;
         const token = req.headers.authorization.split(" ")[1];
-        console.log(email,password)
+        // console.log(email,password)
         const admin = await SuperAdmin.findOne({email});
-        console.log(admin)
+        // console.log(admin)
         if(token){
             jwt.verify(token,process.env.JWT_SECRET!,(err:any,decoded:any)=>{
                 if(err){
