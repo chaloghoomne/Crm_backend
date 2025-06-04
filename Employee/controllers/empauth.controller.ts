@@ -5,10 +5,10 @@ import  jwt  from "jsonwebtoken";
 
 export const Login = async(req:any,res:any)=>{
     try{
-        console.log(req.body)
+        // console.log(req.body)
         const {email,password} = req.body;
         const Emp = await Employee.findOne({email,password});
-       console.log(Emp.companyId,Emp.role) 
+    //    console.log(Emp.companyId,Emp.role) 
         if(Emp){
         const token = jwt.sign({id:Emp._id,role: Emp.role,company_id:Emp.companyId},process.env.VITE_JWT_SECRET!);
         if(email && password){
