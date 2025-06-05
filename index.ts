@@ -6,7 +6,8 @@ import companyRoutes from './superAdmin/routes/companydetails.routes';
 import empfunctionRoutes from './Employee/routes/empfunction.routes';
 import superAdminauthRoutes from './superAdmin/routes/auth.routes';
 import employeeLoginRoutes from './Employee/routes/empauth.routes';
-import paymentRoutes from './Employee/routes/empPayment.routes'
+import paymentRoutes from './Employee/routes/empPayment.routes';
+import empOperationRoutes from './Employee/routes/empOperations.routes';
  
 dotenv.config();
 
@@ -15,13 +16,7 @@ const PORT = process.env.PORT || 5174;
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
-}));
-
-app.options('*', cors());
-
+app.use(cors());
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -42,6 +37,7 @@ app.use('/api', empfunctionRoutes);
 app.use('/api', employeeLoginRoutes)
 app.use('/api',superAdminauthRoutes)
 app.use('/api', paymentRoutes)
+app.use('/api',empOperationRoutes)
 // Connect DB and start server
 connectDB()
   .then(() => {
