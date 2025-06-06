@@ -8,7 +8,7 @@ import superAdminauthRoutes from './superAdmin/routes/auth.routes';
 import employeeLoginRoutes from './Employee/routes/empauth.routes';
 import paymentRoutes from './Employee/routes/empPayment.routes';
 import empOperationRoutes from './Employee/routes/empOperations.routes';
- 
+import empInvoiceRoutes from './Employee/routes/empInvoice.routes';
 dotenv.config();
 
 const app = express();
@@ -38,6 +38,7 @@ app.use('/api', employeeLoginRoutes)
 app.use('/api',superAdminauthRoutes)
 app.use('/api', paymentRoutes)
 app.use('/api',empOperationRoutes)
+app.use('/api',empInvoiceRoutes)
 // Connect DB and start server
 connectDB()
   .then(() => {
