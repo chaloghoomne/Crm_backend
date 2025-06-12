@@ -12,11 +12,14 @@ import empInvoiceRoutes from './Employee/routes/empInvoice.routes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5174;
+const PORT = 5174;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "*", // For testing; restrict in production
+}));
+
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

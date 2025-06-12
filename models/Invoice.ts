@@ -2,6 +2,7 @@ import mongoose,{Schema,Document,models,model} from "mongoose";
 
 const invoiceSchema = new Schema({
     companyId:{type:Schema.Types.ObjectId,ref:'company',required:true},
+    clientType:{type:String,required:true},
     invoiceNumber:{type:String,required:true},
     invoiceDate:{type:Date,required:true},
     dueDate:{type:Date,required:true},
@@ -25,7 +26,7 @@ const invoiceSchema = new Schema({
     notes:{type:String,default:""},
     items:{type:[Object],required:true},
     status:{type:String,default:"pending"},
-
+    gstNumber:{type:String},
 })
 
 const Invoice = models.Invoice || model<Document>("Invoice",invoiceSchema);
