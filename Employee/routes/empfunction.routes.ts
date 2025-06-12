@@ -2,7 +2,7 @@ import express from "express";
 
 const router = express.Router();
 
-import {addLead, deleteEmp, getAllEmp, getAllLeads, getLeads, makeNewEmp, sendmail} from "../controllers/empfunction.controller";
+import {addLead, addNewAgent, deleteEmp, forwardLead, getAgent, getAllEmp, getAllLeads, getLeads, getLeadsPaged, makeNewEmp, saveFollowUp, sendmail, setStatus} from "../controllers/empfunction.controller";
 import {getallmails} from "../controllers/empfunction.controller";
 
 router.post("/sendmail",sendmail);
@@ -13,6 +13,11 @@ router.get("/getAllEmp/:id",getAllEmp);
 router.get("/deleteEmp/:id",deleteEmp);
 router.get("/getAllLeads/:id",getAllLeads);
 router.get("/getLeads",getLeads);
-
+router.post("/addnewagent",addNewAgent);
+router.get("/getAgents/:id",getAgent);
+router.post("/setStatus",setStatus);
+router.post("/getLeadsPaged",getLeadsPaged);
+router.post("/saveFollowUp",saveFollowUp);
+router.get("/forwardLead/:id",forwardLead);
 
 export default router

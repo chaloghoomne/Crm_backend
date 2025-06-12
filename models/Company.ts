@@ -12,6 +12,11 @@ const EmailAccountSchema = new Schema({
 const companySchema = new Schema({
     companyName:{type:String,required:true},
     adminEmail:{type:String,required:true},
+    address:{type:String,required:true},
+    accountNumber:{type:String,required:true},
+    ifscCode:{type:String,required:true},
+    upi:{type:String,required:true},
+    bankName:{type:String,required:true},
     subscription:{
         plan:{type:String,required:true},
         status:{type:String,required:true},

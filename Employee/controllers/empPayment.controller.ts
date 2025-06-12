@@ -9,12 +9,12 @@ let instance = new Razorpay({
   key_secret: process.env.RAZORPAY_SECRET,  // Correct env variable
 });
 
-console.log(process.env.RAZORPAY_KEY_ID,process.env.RAZORPAY_SECRET)
+// console.log(process.env.RAZORPAY_KEY_ID,process.env.RAZORPAY_SECRET)
 
 export const leadPayment = async (req: any, res: any) => {
   try {
     const { leadId, amount } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     if (!leadId || !amount) {
       return res.status(400).json({ message: "leadId and amount are required" });
     }
@@ -27,11 +27,11 @@ export const leadPayment = async (req: any, res: any) => {
       receipt: receiptId,
     };
 
-    console.log("Creating Razorpay Order with options:", options);
+    // console.log("Creating Razorpay Order with options:", options);
 
     const order = await instance.orders.create(options);
 
-    console.log('Razorpay Order:', order);
+    // console.log('Razorpay Order:', order);
 
     // Save in DB after successful order creation
     const data = await Transaction.create({
@@ -42,7 +42,7 @@ export const leadPayment = async (req: any, res: any) => {
       razorpayOrderId: order.id, // Save Razorpay Order ID too (best practice)
     });
 
-    console.log('Transaction Saved:', data);
+    // console.log('Transaction Saved:', data);
 
     return res.status(200).json(order);
 
