@@ -32,5 +32,16 @@ export const addNewCompany = async (req: any, res: any) => {
         }
     }
 
+    export const editCompanyDetails = async (req: any, res: any) => {
+        try {
+            // console.log(req.params.id);
+            // console.log(req.body);
+            const company = await Company.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true });
+            return res.status(200).json({ message: "Company details updated successfully", company });
+        } catch (error) {
+            return res.status(500).json({ message: "Error fetching company details", error });
+        }
+    }
+
 
 

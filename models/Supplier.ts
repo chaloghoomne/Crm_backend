@@ -1,12 +1,12 @@
 import mongoose,{Schema,Document,model,models} from "mongoose";
 
 const supplierSchema = new Schema({
-    company:{type:String,required:true},
+    company:{type:String},
     ownerName:{type:String},
     email:{type:String,},
     phoneNumber:{type:String},
     gstNumber:{type:String},
-    serviceType:{type:[String],required:true},
+    serviceType:{type:[String]},
     city:{type:String},
     address:{type:String},
     bankName:{type:String},

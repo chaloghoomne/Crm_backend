@@ -52,7 +52,7 @@ export const getItenaryLead = async(req:any,res:any)=>{
 
 export const addSupplier = async(req:any,res:any)=>{
     try{
-        // console.log(req.body);  
+        console.log(req.body.finalValues);  
         const supplier = await Supplier.create(req.body.finalValues);
         console.log(supplier);
         return res.status(200).json({ message: "Supplier added successfully"});
