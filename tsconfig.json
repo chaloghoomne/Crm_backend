@@ -2,10 +2,10 @@
   "compilerOptions": {
     "target": "ES6",
     "module": "CommonJS",
-    "rootDir": "./",
-    "outDir": "dist",
-    "esModuleInterop": true,
+    "rootDir": "./",             // where the .ts files live
+    "outDir": "./dist",          // where to output compiled .js
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true
   },
   "include": ["./"],
