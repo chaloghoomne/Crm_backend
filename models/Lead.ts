@@ -16,7 +16,16 @@ const LeadSchema = new Schema({
     requirements:{type:String},
     fromDate:{type:Date},
     toDate:{type:Date},
-    followUp:{type:[Object],default:[]},
+    followUp: [
+  {
+    status: { type: String },
+    date: { type: Date },
+    nextDate: { type: Date },
+    remarks: { type: String },
+    price: { type: Number },
+    reminder: { type: String },
+  }
+],
     time:{type:String},
     forward:{type:Boolean},
     price:{type:Number},

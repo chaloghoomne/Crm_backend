@@ -119,13 +119,27 @@ export const makeReceipt = async (req: any, res: any) => {
 
 export const getAllReceipts = async(req:any,res:any)=>{
 	try{
-		const invoice = await Receipt.find({companyId:req.params.id,receiptType:req.params.receiptType});
+		// console.log(req.params);
+		const invoice = await Receipt.find({companyId:req.params.id,receiptType:req.params.receiptType}).populate("invoiceId");
+		// console.log(invoice);
 		if(!invoice)return res.status(500).json({message:"No Receipts Found"});
 		return res.status(200).json(invoice);
 	}
 	catch(err){
 		console.log(err);
 		return res.status(500).json({message:"Error Finding Receipts"});
+	}
+}
+
+export const getNumber = async(req:any,res:any)=>{
+	try{
+		console.log(req.params.id);
+		const invoice = await Invoice.findOne({_id:req.params.id});
+		console.log(invoice);
+		const phone = invoice?.phone;
+		return res.json({phone});
+	}catch(err){
+		console.log(err);
 	}
 }
 

@@ -18,6 +18,18 @@ export const addNewCompany = async (req: any, res: any) => {
     }
 }
 
+export const getAllCompanies = async (req: any, res: any) => {
+    try {
+        // connectDB()
+        // console.log("hello")
+        const companies = await Company.find();
+        // console.log(companies)  
+        res.status(200).json(companies);
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching company details", error });
+    }
+    }
+
    export const getcompanydetails= async (req:any, res:any) =>{
         try {
             // connectDB()
@@ -28,6 +40,37 @@ export const addNewCompany = async (req: any, res: any) => {
             // console.log(admin)  
             res.status(200).json(admin);
         } catch (error) {
+            return res.status(500).json({ message: "Error fetching company details", error });
+        }
+    }
+
+    export const editEmail = async(req:any,res:any)=>{
+        try{
+            const {emailAccounts}=req.body;
+            const company = await Company.findOneAndUpdate({ _id: req.params.id }, {emailAccounts}, { new: true });
+            return res.status(200).json({ message: "Company details updated successfully", company });
+        }catch(error){
+            return res.status(500).json({ message: "Error fetching company details", error });
+        }
+    }
+
+    export const editImage = async(req:any,res:any)=>{
+        try{
+            const {img,name,companyId} = req.body;
+            console.log(req.body)
+            const company = await Company.findOne({_id:companyId});
+            console.log(company)
+            if(!company) return res.status(500).json({ message: "Error fetching company details"});
+            if(name === "logo"){
+                company.imgurl = img;
+            }else{
+                company.signature = img;
+                
+            }
+            await company.save();
+                return res.status(200).json({ message: "Company details updated successfully", company });
+        }
+        catch(error){
             return res.status(500).json({ message: "Error fetching company details", error });
         }
     }

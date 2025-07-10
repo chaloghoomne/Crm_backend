@@ -23,6 +23,7 @@ const companySchema = new Schema({
         expiresAt:{type:Date,default:Date.now()+(30*24*60*60*1000)},
     },
     imgurl:{type:String},
+    signature:{type:String},
     emailAccounts:[EmailAccountSchema],         
     createdAt:{type:Date,default:Date.now},
 })

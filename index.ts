@@ -9,6 +9,9 @@ import employeeLoginRoutes from './Employee/routes/empauth.routes';
 import paymentRoutes from './Employee/routes/empPayment.routes';
 import empOperationRoutes from './Employee/routes/empOperations.routes';
 import empInvoiceRoutes from './Employee/routes/empInvoice.routes';
+import empReportRoutes from './Employee/routes/empReport.routes';
+import empTaskRoutes from './Employee/routes/empTask.routes'; 
+import { startAllCronJobs } from './cronJobs/cronScheduler';
 dotenv.config();
 
 const app = express();
@@ -42,10 +45,13 @@ app.use('/api',superAdminauthRoutes)
 app.use('/api', paymentRoutes)
 app.use('/api',empOperationRoutes)
 app.use('/api',empInvoiceRoutes)
+app.use('/api',empReportRoutes)
+app.use("/api",empTaskRoutes)
 // Connect DB and start server
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
+      startAllCronJobs();
       console.log(`⚙️ Server is running at port: ${PORT}`);
     });
   })

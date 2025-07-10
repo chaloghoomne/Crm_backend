@@ -3,16 +3,19 @@ import nodemailer from "nodemailer";
 import Employee from "../../models/Employee";
 import Lead from "../../models/Lead";
 import Agent from "../../models/Agent";
+import { sendMail } from "../../utils/mailer";
+import Company from "../../models/Company";
 
 export const sendmail = async(req:any,res:any)=>{
-    // console.log(req.body)
+    console.log(req.body)
     try{
-        const {fromEmail,pass,host,provider,to,cc,companyId,sentBy,subject,body,displayText} = req.body;
+        const {fromEmail,pass,host,secure,provider,to,cc,companyId,sentBy,subject,body,displayText} = req.body;
         // console.log(fromEmail,pass,host,to,cc,subject,body,displayText); 
         const emailInstance = new email({from:fromEmail,pass,host,provider,to,cc,companyId,sentBy,subject,body,displayText});
         await emailInstance.save();
         const transporter = nodemailer.createTransport({
-            service: provider, // Or use other services dynamically if needed
+            host:host,
+            port:secure ? 465 : 587,
             auth: {
               user: fromEmail,
               pass,
@@ -37,6 +40,41 @@ export const sendmail = async(req:any,res:any)=>{
     }
 }
 
+export const editEmp = async(req:any,res:any)=>{
+  try{
+    const {data} = req.body;
+    const emp = await Employee.findOneAndUpdate({ _id: data.id }, data);
+    return res.status(200).json({ message: "Employee details updated successfully", emp });
+  }catch(error:any){
+    console.log(error)
+    return res.status(500).json({ message: "Error fetching all company Emails", error });
+  }
+}
+
+export const editEmpRole = async(req:any,res:any)=>{
+  try{
+    const {data} = req.body;
+    const emp = await Employee.findOne({ _id: data.id });
+    if(data.type == "role"){
+      emp.role = data.role
+    }
+    else if(data.type == "password"){
+      emp.password = data.password
+    }      
+      
+    else{
+      emp.name = data.name;
+      emp.email = data.email;
+      emp.password = data.password
+    }
+    await emp.save();
+    return res.status(200).json({ message: "Employee details updated successfully", emp });
+  }catch(error:any){
+    console.log(error)
+    return res.status(500).json({ message: "Error fetching all company Emails", error });
+  }
+}
+
 export const getallmails = async(req:any,res:any)=>{
   // console.log(req.body)
   try{
@@ -49,14 +87,43 @@ export const getallmails = async(req:any,res:any)=>{
 }
 
 export const makeNewEmp = async(req:any,res:any)=>{
-  // console.log(req.body)
-  try{
-    const emp = await Employee.create(req.body);
-    return res.status(200).json({ message: "Employee added successfully", emp });
-  }catch(error:any){
-    console.log(error)
-    return res.status(500).json({ message: "Error fetching all company Emails", error });
-  }
+	// console.log(req.body)
+	try {
+		const { companyId } = req.body;
+		if (!companyId)
+			return res.status(400).json({ message: "Company ID is required" });
+		const existingEmp = await Employee.findOne({
+			email: req.body.email,
+			companyId,
+		});
+		if (existingEmp)
+			return res.status(400).json({
+				message:
+					"Employee with this email already exists in this company",
+			});
+		const company = await Company.findById(companyId);
+		const companyEmails = company.emailAccounts[0];
+		// console.log(companyEmails);
+		const emp = await Employee.create(req.body);
+		sendMail({
+			from: companyEmails.email,
+			pass: companyEmails.password,
+			host: companyEmails.host,
+      secure: companyEmails.secure,
+			provider: companyEmails.provider,
+			to: req.body.email,
+			subject: "Welcome to Chalo CRM",
+			html: `<h1>Welcome ${req.body.name}</h1><p>Your account has been created successfully.</p>`,
+		});
+		return res
+			.status(200)
+			.json({ message: "Employee added successfully", emp });
+	} catch (error: any) {
+		console.log(error);
+		return res
+			.status(500)
+			.json({ message: "Error fetching all company Emails", error });
+	}
 }
 
 export const getAllEmp = async(req:any,res:any)=>{
