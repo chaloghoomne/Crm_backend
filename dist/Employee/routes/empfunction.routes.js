@@ -1,0 +1,26 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const router = express_1.default.Router();
+const empfunction_controller_1 = require("../controllers/empfunction.controller");
+const empfunction_controller_2 = require("../controllers/empfunction.controller");
+router.post("/editEmpRole", empfunction_controller_1.editEmpRole);
+router.put("/editEmp/:id", empfunction_controller_1.editEmp);
+router.post("/sendmail", empfunction_controller_1.sendmail);
+router.post("/add-new-lead", empfunction_controller_1.addLead);
+router.get("/getallmails", empfunction_controller_2.getallmails);
+router.post("/makeNewEmp", empfunction_controller_1.makeNewEmp);
+router.get("/getAllEmp/:id", empfunction_controller_1.getAllEmp);
+router.get("/deleteEmp/:id", empfunction_controller_1.deleteEmp);
+router.get("/getAllLeads/:id", empfunction_controller_1.getAllLeads);
+router.get("/getLeads", empfunction_controller_1.getLeads);
+router.post("/addnewagent", empfunction_controller_1.addNewAgent);
+router.get("/getAgents/:id", empfunction_controller_1.getAgent);
+router.post("/setStatus", empfunction_controller_1.setStatus);
+router.post("/getLeadsPaged", empfunction_controller_1.getLeadsPaged);
+router.post("/saveFollowUp", empfunction_controller_1.saveFollowUp);
+router.get("/forwardLead/:id", empfunction_controller_1.forwardLead);
+exports.default = router;

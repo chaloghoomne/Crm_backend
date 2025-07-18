@@ -14,7 +14,7 @@ router.post("/makeNewEmp",makeNewEmp);
 router.get("/getAllEmp/:id",getAllEmp);
 router.get("/deleteEmp/:id",deleteEmp);
 router.get("/getAllLeads/:id",getAllLeads);
-router.get("/getLeads",getLeads);
+router.get("/getLeads",getLeads);   
 router.post("/addnewagent",addNewAgent);
 router.get("/getAgents/:id",getAgent);
 router.post("/setStatus",setStatus);
