@@ -2,9 +2,6 @@ import mongoose,{Schema,Document,model,models} from "mongoose";
 
 const emailSchema = new Schema({
     from:{type:String,required:true},
-    pass:{type:String,required:true},
-    host:{type:String,required:true},
-    provider:{type:String,required:true},
     to:{type:String,required:true},
     subject:{type:String,required:true},
     body:{type:String,required:true},

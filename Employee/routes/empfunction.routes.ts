@@ -4,10 +4,13 @@ const router = express.Router();
 
 import {addLead, addNewAgent, deleteEmp, editEmp, editEmpRole, forwardLead, getAgent, getAllEmp, getAllLeads, getLeads, getLeadsPaged, makeNewEmp, saveFollowUp, sendmail, setStatus} from "../controllers/empfunction.controller";
 import {getallmails} from "../controllers/empfunction.controller";
+// import { getUrl } from "../controllers/oauth.controller";
+
 
 router.post("/editEmpRole",editEmpRole);
 router.put("/editEmp/:id",editEmp);
 router.post("/sendmail",sendmail);
+// router.get('/google/url', getUrl);
 router.post("/add-new-lead",addLead);
 router.get("/getallmails",getallmails);
 router.post("/makeNewEmp",makeNewEmp);

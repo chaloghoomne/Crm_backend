@@ -12,6 +12,7 @@ import empInvoiceRoutes from './Employee/routes/empInvoice.routes';
 import empReportRoutes from './Employee/routes/empReport.routes';
 import empTaskRoutes from './Employee/routes/empTask.routes'; 
 import { startAllCronJobs } from './cronJobs/cronScheduler';
+import authRoutes from './Employee/routes/oauth.routes'; // Ensure this path is correct
 dotenv.config();
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api',empOperationRoutes)
 app.use('/api',empInvoiceRoutes)
 app.use('/api',empReportRoutes)
 app.use("/api",empTaskRoutes)
+app.use('/api',authRoutes);
 // Connect DB and start server
 connectDB()
   .then(() => {

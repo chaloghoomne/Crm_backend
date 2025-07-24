@@ -1,12 +1,16 @@
 import mongoose,{Schema,Document}  from "mongoose";
 
 const EmailAccountSchema = new Schema({
-    name:{ type:String,required:true},
-    email:{type:String,required:true},
-    password:{type:String,required:true},
-    host:{type:String,required:true},
-    secure:{type:Boolean,required:true},
-    provider:{type:String,required:true},
+    name:{ type:String,},
+    email:{type:String,},
+    host:{type:String,},
+    secure:{type:Boolean,},
+    provider:{type:String,}, // e.g., 'gmail' or 'outlook'
+    oauth: {
+        accessToken: { type: String },
+        refreshToken: { type: String },
+        expiryDate: { type: Date }
+    },
 })
 
 const companySchema = new Schema({
@@ -24,7 +28,8 @@ const companySchema = new Schema({
     },
     imgurl:{type:String},
     signature:{type:String},
-    emailAccounts:[EmailAccountSchema],         
+    emailAccounts:[EmailAccountSchema],    
+    // emailAccounts:[{ type: Schema.Types.ObjectId, ref: 'EmailAccount' }],     
     createdAt:{type:Date,default:Date.now},
 })
 
