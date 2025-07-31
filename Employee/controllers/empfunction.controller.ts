@@ -2,13 +2,16 @@ import email from "../../models/Email";
 import Employee from "../../models/Employee";
 import Lead from "../../models/Lead";
 import Agent from "../../models/Agent";
-import { sendMail } from "../../utils/mailer";
 import Company from "../../models/Company";
 import { google } from "googleapis";
 import nodemailer, { TransportOptions } from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 import axios from "axios";
 import { SMTPClient } from "smtp-client";
+import Operation from "../../models/Operations";
+import bcrypt from "bcrypt";
+import Plan from "../../models/Plan";
+import {sendMail} from "../../utils/mailer";
 // assuming this is your email log model
 
 export const sendmail = async (req: any, res: any) => {
@@ -251,6 +254,10 @@ async function updateTokensInDB(
 export const editEmp = async(req:any,res:any)=>{
   try{
     const {data} = req.body;
+    if(data.password){
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      data.password = hashedPassword;
+    }
     const emp = await Employee.findOneAndUpdate({ _id: data.id }, data);
     return res.status(200).json({ message: "Employee details updated successfully", emp });
   }catch(error:any){
@@ -259,29 +266,57 @@ export const editEmp = async(req:any,res:any)=>{
   }
 }
 
-export const editEmpRole = async(req:any,res:any)=>{
-  try{
-    const {data} = req.body;
-    const emp = await Employee.findOne({ _id: data.id });
-    if(data.type == "role"){
-      emp.role = data.role
+export const editEmpRole = async (req: any, res: any) => {
+  try {
+    const { data } = req.body;
+
+    // Check if ID is provided
+    if (!data?.id) {
+      return res.status(400).json({ message: "Employee ID is required" });
     }
-    else if(data.type == "password"){
-      emp.password = data.password
-    }      
-      
-    else{
+
+    const emp = await Employee.findById(data.id);
+    if (!emp) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    // Update according to type
+    if (data.type === "role") {
+      if (!data.role)
+        return res.status(400).json({ message: "Role is required" });
+      emp.role = data.role;
+    } else if (data.type === "password") {
+      if (!data.password)
+        return res.status(400).json({ message: "Password is required" });
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      emp.password = hashedPassword;
+    } else {
+      // Editing name, email, and password
+      if (!data.name || !data.email || !data.password) {
+        return res
+          .status(400)
+          .json({ message: "Name, Email, and Password are required" });
+      }
       emp.name = data.name;
       emp.email = data.email;
-      emp.password = data.password
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      emp.password = hashedPassword;
     }
+
     await emp.save();
-    return res.status(200).json({ message: "Employee details updated successfully", emp });
-  }catch(error:any){
-    console.log(error)
-    return res.status(500).json({ message: "Error fetching all company Emails", error });
+
+    return res.status(200).json({
+      message: "Employee details updated successfully",
+      emp,
+    });
+  } catch (error: any) {
+    console.error("Error editing employee:", error);
+    return res.status(500).json({
+      message: "Error updating employee details",
+      error: error.message,
+    });
   }
-}
+};
 
 export const getallmails = async(req:any,res:any)=>{
   // console.log(req.body)
@@ -309,16 +344,12 @@ export const makeNewEmp = async(req:any,res:any)=>{
 				message:
 					"Employee with this email already exists in this company",
 			});
-		const company = await Company.findById(companyId);
-		const companyEmails = company.emailAccounts[0];
 		// console.log(companyEmails);
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    req.body.password = hashedPassword;
 		const emp = await Employee.create(req.body);
-		sendMail({
-			from: companyEmails.email,
-			pass: companyEmails.password,
-			host: companyEmails.host,
-      secure: companyEmails.secure,
-			provider: companyEmails.provider,
+		await sendMail({
+      companyId: req.body.companyId,
 			to: req.body.email,
 			subject: "Welcome to Chalo CRM",
 			html: `<h1>Welcome ${req.body.name}</h1><p>Your account has been created successfully.</p>`,
@@ -379,6 +410,58 @@ export const getAllLeads = async(req:any,res:any)=>{
   }
 }
 
+export const getAllOperationByCompany = async (req: any, res: any) => {
+  const { id } = req.params;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  // let dateFilter: any = {};
+
+  console.log("Fetching operations for company ID:", id);
+  // console.log("Date Range:", start, end);
+  console.log("Page:", page, "Limit:", limit);
+
+  // Build date filter if valid range provided
+  // if (start && end) {
+  //   const startDate = new Date(start);
+  //   const endDate = new Date(end);
+
+  //   if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+  //     dateFilter.createdAt = { $gte: startDate, $lte: endDate };
+  //   }
+  // }
+
+  try {
+    const leads = await Operation.find({
+      companyId: id,
+
+    })
+      .skip(skip)
+      .limit(limit)
+      .populate("leadId");
+
+    const totalCount = await Operation.countDocuments({
+      companyId: id,
+      // ...dateFilter,
+    });
+    console.log("Total Operations Count:", totalCount);
+    console.log("Operations Fetched:", leads.length);
+
+    return res.status(200).json({
+      page,
+      leads,
+      totalItems: totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+    });
+  } catch (err) {
+    console.error("Error fetching operations:", err);
+    return res
+      .status(500)
+      .json({ message: "Error fetching employee leads", err });
+  }
+};
+
 export const getLeads = async(req:any,res:any)=>{
   // console.log(req.params.id)
   try{
@@ -430,7 +513,7 @@ export const setStatus = async(req:any,res:any)=>{
 
 export const getLeadsPaged = async (req: any, res: any) => {
   try {
-    let { companyId, selectedTab, limit = 10, page = 1 } = req.body;
+    let { companyId, selectedTab, limit = 2, page = 1 } = req.body;
     console.log(req.body);    
     page = Math.max(Number(page), 1);
     limit = Math.max(Number(limit), 1);
@@ -444,7 +527,7 @@ export const getLeadsPaged = async (req: any, res: any) => {
     const leads = await Lead.find(query).skip(skip).limit(limit);
     const count = await Lead.countDocuments(query);
 
-    return res.status(200).json({ data: leads, totalCount: count });
+    return res.status(200).json({ data: leads, totalPages: Math.ceil(count / limit) });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Error Fetching Leads', err });
@@ -473,16 +556,69 @@ export const forwardLead = async(req:any,res:any)=>{
     console.log(req.params.id);
     const lead = await Lead.findOne({_id:req.params.id})
     if(lead.forward) return res.status(200).json({message:'Lead Already Forwarded'})
-    if(lead.status === 'Complete'){
+
     lead.forward = true;
     lead.save();
     return res.status(200).json({message:'Lead Forwarded'})
-    }
-    return res.status(500).json({message:'Lead Status not Complete'})
+    // return res.status(500).json({message:'Lead Status not Complete'})
   }catch(err){
     console.log(err);
     return res.status(500).json({message:'Error Forwarding Lead',err});
   }
 }
 
+export const makePlan = async(req:any,res:any)=>{
+  try{
+    const data = req.body;
+    const {id} = req.params;
+    // if(!data.companyId) return res.status(400).json({message:"Company ID is required"});
+    const plan = await Plan.create({...data,companyId:id});
+    return res.status(200).json({message:"Plan Created Successfully",plan});
+  }catch(error:any){
+    console.log(error);
+    return res.status(500).json({ message: "Error creating plan", error });
+  }
+}
 
+
+export const getPlans = async(req:any,res:any)=>{
+  try{
+    const plans = await Plan.find({companyId:req.params.id});
+    return res.status(200).json({message:"Plans Found",plans});
+  }catch(error:any){
+    console.log(error);
+    return res.status(500).json({ message: "Error fetching plans", error });
+  }
+}
+export const getPlan = async (req: any, res: any) => {
+  try {
+    const plans = await Plan.findOne({ _id: req.params.id });
+    console.log(plans);
+    return res.status(200).json({ message: "Plan Found", plans });
+  } catch (error: any) {
+    console.log(error);
+    return res.status(500).json({ message: "Error fetching plans", error });
+  }
+};
+
+export const updatePlan = async(req:any,res:any)=>{
+  try{
+    const data = req.body;
+    console.log(req.body);
+    const plan = await Plan.findOneAndUpdate({ _id: data._id }, data);
+    console.log(plan);
+    return res.status(200).json({message:"Plan Updated Successfully"});
+  }catch(error:any){
+    console.log(error);
+    return res.status(500).json({ message: "Error updating plan", error });
+  }
+}
+export const deletePlan = async(req:any,res:any)=>{
+  try{
+    const plan = await Plan.findByIdAndDelete({_id:req.params.id});
+    return res.status(200).json({message:"Plan Deleted Successfully"});
+  }catch(error:any){
+    console.log(error);
+    return res.status(500).json({ message: "Error deleting plan", error });
+  }
+}

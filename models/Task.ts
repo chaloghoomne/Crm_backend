@@ -39,8 +39,8 @@ const taskSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["Pending", "In Progress", "Completed"],
-        default: "Pending",
+        enum: ["pending","completed"],
+        default: "pending",
     },
     dueDate: {
         type: Date,

@@ -21,17 +21,13 @@ const companySchema = new Schema({
     ifscCode:{type:String},
     upi:{type:String},
     bankName:{type:String},
-    subscription:{
-        plan:{type:String,required:true},
-        status:{type:String,required:true},
-        expiresAt:{type:Date,default:Date.now()+(30*24*60*60*1000)},
-    },
+    plan:{type:Schema.Types.ObjectId,ref:"Plan"},
     imgurl:{type:String},
     signature:{type:String},
     emailAccounts:[EmailAccountSchema],    
     // emailAccounts:[{ type: Schema.Types.ObjectId, ref: 'EmailAccount' }],     
     createdAt:{type:Date,default:Date.now},
-})
+},{timestamps:true});
 
 const Company = mongoose.models.Company || mongoose.model<Document>("Company",companySchema);
 export default Company;

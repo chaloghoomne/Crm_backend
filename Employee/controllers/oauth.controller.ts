@@ -35,6 +35,8 @@ export const getUrl = async (
       "base64"
     );
 
+    console.log("encodedState:", encodedState);
+
     let authUrl: string;
 
     switch (provider.toLowerCase()) {
@@ -143,6 +145,8 @@ export const handleGoogleCallback = async (
       return;
     }
 
+    console.log("decodedState:", decodedState);
+
     const oAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
       process.env.GOOGLE_CLIENT_SECRET!,
@@ -155,6 +159,8 @@ export const handleGoogleCallback = async (
       throw new Error("Failed to obtain valid tokens from Google");
     }
     oAuth2Client.setCredentials(tokens);
+
+    console.log("tokens:", tokens);
 
     // Fetch user info to get email
     const oAuth2 = google.oauth2({ version: "v2", auth: oAuth2Client });
@@ -220,9 +226,13 @@ export const handleGoogleCallback = async (
       { new: true }
     );
 
-    res.redirect(`${process.env.FRONTEND_URL}/apps/settings/email`);
+    console.log("New email account added:", newEmailAccount);
+
+
+    res.redirect(`${process.env.FRONTEND_URL}/apps/settings`);
   } catch (error: any) {
     console.error("Google callback error:", error); // Log for debugging
+    console.log("Error message:", error.message);
     res
       .status(500)
       .json({

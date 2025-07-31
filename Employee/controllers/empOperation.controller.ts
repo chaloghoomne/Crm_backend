@@ -27,11 +27,14 @@ export const assignLead = async(req:any,res:any)=>{
 export const getAssignedLeads = async(req:any,res:any)=>{
     try{
         // console.log(req.query);  
+        const {page,limit} = req.query;
+        const skip = (page-1)*limit;
         const {companyId,empId} = req.query;
         // console.log(companyId,empId)
-        const leads = await Operation.find({assignedEmpId:empId,companyId:companyId}).populate('leadId');
+        const leads = await Operation.find({assignedEmpId:empId,companyId:companyId}).skip(skip).limit(limit).populate('leadId');
+        const total = await Operation.countDocuments({assignedEmpId:empId,companyId:companyId});
         // console.log(leads);
-        return res.status(200).json(leads);
+        return res.status(200).json({leads,totalPages:Math.ceil(total/limit)});
     }catch(error:any){
         console.log(error)
         return res.status(500).json({ message: "Error Assigning Leads", error });

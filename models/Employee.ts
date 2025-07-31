@@ -8,7 +8,7 @@ const employeeSchema = new  Schema({
     phone:{type:String},
     companyId: { type: Schema.Types.ObjectId, ref: 'Company', required: true },
     createdAt:{type:Date,default:Date.now},
-})
+},{timestamps:true})
 
 const Employee = models.Employee || model<Document>("Employee",employeeSchema);
 export default Employee;

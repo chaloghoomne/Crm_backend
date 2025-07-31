@@ -400,31 +400,45 @@ export const empLeadsByCompany = async(req:any,res:any)=>{
 
 export const empOperationsByCompany = async (req: any, res: any) => {
   const { id } = req.params;
-  const { start, end, page, limit } = req.query;
+  const start = req.query.start as string;
+  const end = req.query.end as string;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
+
   let dateFilter: any = {};
 
+  console.log("Fetching operations for company ID:", id);
+  console.log("Date Range:", start, end);
+  console.log("Page:", page, "Limit:", limit);
+
+  // Build date filter if valid range provided
   if (start && end) {
     const startDate = new Date(start);
     const endDate = new Date(end);
 
-    // Validate the date objects
     if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
       dateFilter.createdAt = { $gte: startDate, $lte: endDate };
     }
   }
+
   try {
-    const leads = await Lead.find({
+    const leads = await Operation.find({
       companyId: id,
       ...dateFilter,
     })
       .skip(skip)
       .limit(limit)
       .populate("assignedEmpId");
-    const totalCount = await Lead.countDocuments({
+
+
+    const totalCount = await Operation.countDocuments({
       companyId: id,
       ...dateFilter,
     });
+    console.log("Total Operations Count:", totalCount);
+    console.log("Operations Fetched:", leads.length);
+
     return res.status(200).json({
       page,
       leads,
@@ -432,11 +446,12 @@ export const empOperationsByCompany = async (req: any, res: any) => {
       totalPages: Math.ceil(totalCount / limit),
     });
   } catch (err) {
-    console.log(err);
+    console.error("Error fetching operations:", err);
     return res
       .status(500)
       .json({ message: "Error fetching employee leads", err });
   }
 };
+
 
 

@@ -55,11 +55,6 @@ const tasks = await Lead.find({
         }
 
         await sendMail({
-          from: emailAccount.email,
-          pass: emailAccount.password,
-          host: emailAccount.host,
-          secure: emailAccount.secure,
-          provider: emailAccount.provider,
           to: emp.email,
           subject: `⏰ Task Reminder: ${task.destination + "-" + task.name}`,
           html: `
@@ -69,6 +64,7 @@ const tasks = await Lead.find({
             <br />
             <p>Thanks,<br/>CRM System</p>
           `,
+          companyId: tasks[0].companyId
         });
 
         console.log(`📨 Reminder sent to ${emp.email}`);

@@ -1,16 +1,31 @@
 
 import Company from "../../models/Company";
 import Employee from "../../models/Employee";
+import bcrypt from "bcrypt";
 // import Employee from "../../models/Employee";
 
 export const addNewCompany = async (req: any, res: any) => {
     try{
-        // console.log(req.body)
-        if(await Company.findOne({adminEmail:req.body.adminEmail})) return res.status(200).json({message:"Company is already Present"})
-        const  company = await Company.create(req.body);
-        // console.log(company.password)
-        const  employee = await Employee.create({email:company.adminEmail,password:company.password,name:company.companyName,role:'admin',companyId:company._id});
-        // console.log(company)
+        console.log(req.body)
+        if (await Company.findOne({ adminEmail: req.body.adminEmail })) {
+          return res
+            .status(200)
+            .json({ message: "Company is already Present" });
+        }
+
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        const company = await Company.create({
+          ...req.body,
+          password: hashedPassword,
+        });
+
+        const employee = await Employee.create({
+          email: req.body.adminEmail,
+          password: hashedPassword,
+          name: company.companyName,
+          role: "admin",
+          companyId: company._id,
+        });
         return res.status(200).json({ message: "Company added successfully", company });
     }catch(err){
         console.log(err)
@@ -22,7 +37,7 @@ export const getAllCompanies = async (req: any, res: any) => {
     try {
         // connectDB()
         // console.log("hello")
-        const companies = await Company.find();
+        const companies = await Company.find().populate("plan");
         // console.log(companies)  
         res.status(200).json(companies);
     } catch (error) {
@@ -33,11 +48,13 @@ export const getAllCompanies = async (req: any, res: any) => {
    export const getcompanydetails= async (req:any, res:any) =>{
         try {
             // connectDB()
-            // console.log("hello")
+            console.log("hello")
             const companyId = req.params.id;
-            // console.log(companyId)
-            const admin = await Company.findOne({ _id: companyId });
-            // console.log(admin)  
+            console.log(companyId)
+            const admin = await Company.findOne({ _id: companyId }).populate(
+              "plan"
+            );
+            console.log(admin)  
             res.status(200).json(admin);
         } catch (error) {
             return res.status(500).json({ message: "Error fetching company details", error });

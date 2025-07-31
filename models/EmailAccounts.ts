@@ -14,7 +14,7 @@ const EmailAccountSchema = new Schema({
         expiryDate: { type: Date }
     },
   companyId: { type: Schema.Types.ObjectId, ref: 'Company', required: true }
-});
+}, { timestamps: true });
 
 const EmailAccount = mongoose.models.EmailAccount || mongoose.model('EmailAccount', EmailAccountSchema);
 export default EmailAccount;
