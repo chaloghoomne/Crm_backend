@@ -45,11 +45,6 @@ export const scheduleTaskReminder = () => {
         }
 
         await sendMail({
-          from: emailAccount.email,
-          pass: emailAccount.password,
-          host: emailAccount.host,
-          secure: emailAccount.secure,
-          provider: emailAccount.provider,
           to: emp.email,
           subject: `⏰ Task Reminder: ${task.taskName}`,
           html: `
@@ -58,7 +53,7 @@ export const scheduleTaskReminder = () => {
             <p>Please make sure to complete it on time.</p>
             <br />
             <p>Thanks,<br/>CRM System</p>
-          `,
+          `,companyId:task[0].companyId
         });
 
         console.log(`📨 Reminder sent to ${emp.email}`);
