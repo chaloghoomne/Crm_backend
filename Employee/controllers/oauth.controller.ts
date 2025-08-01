@@ -8,46 +8,48 @@ import { Types } from "mongoose";
  * Generates the Google OAuth2 URL for user consent.
  */
 export const getUrl = async (
-  req: Request<{ companyId: string , provider: string   }>,
+  req: Request<{ companyId: string; provider: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { companyId ,provider} = req.params;
-    console.log("getUrl called with companyId:", companyId, "provider:", provider);
-// e.g., 'gmail', 'outlook', 'zoho'
+    const { companyId, provider } = req.params;
 
-    // Validate inputs
+    console.log("=== getUrl STARTED ===");
+    console.log("Received request with companyId:", companyId);
+    console.log("Received provider:", provider);
+
     if (!companyId) {
+      console.error("Missing companyId in request");
       throw new Error("Company ID is required");
     }
+
     if (
       !provider ||
       !["gmail", "outlook", "zoho"].includes(provider.toLowerCase())
     ) {
+      console.error("Invalid provider received:", provider);
       throw new Error(
         "Invalid or missing provider (must be gmail, outlook, or zoho)"
       );
     }
 
-    // Base64-encode state for security (universal)
     const encodedState = Buffer.from(JSON.stringify({ companyId })).toString(
       "base64"
     );
-
-    console.log("encodedState:", encodedState);
+    console.log("Encoded state generated:", encodedState);
 
     let authUrl: string;
 
     switch (provider.toLowerCase()) {
       case "gmail": {
-        const { google } = await import("googleapis"); // Dynamic import if needed
+        console.log("Generating Google OAuth URL...");
+        const { google } = await import("googleapis");
         const oAuth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID!,
           process.env.GOOGLE_CLIENT_SECRET!,
           process.env.GOOGLE_REDIRECT_URI!
         );
-
         authUrl = oAuth2Client.generateAuthUrl({
           access_type: "offline",
           scope: [
@@ -57,11 +59,12 @@ export const getUrl = async (
           prompt: "consent",
           state: encodedState,
         });
+        console.log("Generated Google OAuth URL:", authUrl);
         break;
       }
 
       case "outlook": {
-        // Using Graph scopes for consistency and reliability (change to SMTP if needed: 'https://outlook.office.com/SMTP.Send offline_access User.Read')
+        console.log("Generating Outlook OAuth URL...");
         const scopes =
           "https://graph.microsoft.com/Mail.Send offline_access https://graph.microsoft.com/User.Read";
         authUrl =
@@ -75,38 +78,48 @@ export const getUrl = async (
             scope: scopes,
             response_mode: "query",
             state: encodedState,
-            prompt: "consent", // Forces fresh consent to avoid invalid_grant
+            prompt: "consent",
           }).toString();
+        console.log("Generated Outlook OAuth URL:", authUrl);
         break;
       }
 
       case "zoho": {
+        console.log("Generating Zoho OAuth URL...");
         authUrl =
-          `https://accounts.zoho.com/oauth/v2/auth?` + // Use regional if needed (e.g., .in)
+          `https://accounts.zoho.com/oauth/v2/auth?` +
           new URLSearchParams({
             client_id: process.env.ZOHO_CLIENT_ID!,
             response_type: "code",
             redirect_uri: process.env.ZOHO_REDIRECT_URI!,
-            scope: "ZohoMail.accounts.ALL,ZohoMail.messages.CREATE", // Adjust scopes as needed
+            scope: "ZohoMail.accounts.ALL,ZohoMail.messages.CREATE",
             access_type: "offline",
             state: encodedState,
             prompt: "consent",
           }).toString();
+        console.log("Generated Zoho OAuth URL:", authUrl);
         break;
       }
 
       default:
+        console.error("Unsupported provider:", provider);
         throw new Error("Unsupported provider");
     }
+
+    console.log(`OAuth URL generation complete for ${provider}.`);
 
     res.json({
       url: authUrl,
       message: `Redirect the user to this URL to authorize ${provider} email sending.`,
     });
+
+    console.log("=== getUrl COMPLETED SUCCESSFULLY ===");
   } catch (error) {
-    next(error); // Pass error to Express error handler
+    console.error("Error in getUrl:", error);
+    next(error);
   }
 };
+
 
 /**
  * GET /google/callback
@@ -117,69 +130,81 @@ export const handleGoogleCallback = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  console.log("=== handleGoogleCallback CALLED ===");
+
   try {
     const code = req.query.code as string;
     const state = req.query.state as string;
 
-    // Validation: Ensure code and state are present
+    console.log("Received query params -> code:", code, " | state:", state);
+
     if (!code || !state) {
+      console.warn("Missing code or state");
       res.status(400).json({ message: "Missing authorization code or state" });
       return;
     }
 
-    // Decode state (assuming it's base64-encoded JSON from getUrl)
     let decodedState: { companyId: string };
     try {
       const decoded = Buffer.from(state, "base64").toString("utf-8");
       decodedState = JSON.parse(decoded);
+      console.log("Decoded state:", decodedState);
     } catch (decodeError) {
-      // Fallback if not encoded (for backward compatibility)
+      console.warn(
+        "Failed to decode base64 state, falling back to raw:",
+        state
+      );
       decodedState = { companyId: state };
     }
 
     const companyId = decodedState.companyId;
 
-    // Validate companyId as ObjectId
     if (!Types.ObjectId.isValid(companyId)) {
+      console.error("Invalid company ID:", companyId);
       res.status(400).json({ message: "Invalid company ID" });
       return;
     }
 
-    console.log("decodedState:", decodedState);
-
+    console.log("Initializing Google OAuth client...");
     const oAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID!,
       process.env.GOOGLE_CLIENT_SECRET!,
       process.env.GOOGLE_REDIRECT_URI!
     );
 
-    // Exchange code for tokens
+    console.log("Exchanging code for tokens...");
     const { tokens } = await oAuth2Client.getToken(code);
+    console.log("Received tokens:", tokens);
+
     if (!tokens.refresh_token || !tokens.access_token) {
+      console.error("Tokens missing:", tokens);
       throw new Error("Failed to obtain valid tokens from Google");
     }
+
     oAuth2Client.setCredentials(tokens);
+    console.log("OAuth client credentials set.");
 
-    console.log("tokens:", tokens);
-
-    // Fetch user info to get email
+    console.log("Fetching user info...");
     const oAuth2 = google.oauth2({ version: "v2", auth: oAuth2Client });
     const userInfo = await oAuth2.userinfo.get();
     const email = userInfo.data.email;
+    const userName = userInfo.data.name || "Unknown";
 
-    // Handle missing email
+    console.log("Fetched user info -> email:", email, " | name:", userName);
+
     if (!email) {
+      console.warn("No email found in user info");
       res.status(400).json({ message: "Unable to retrieve email from Google" });
       return;
     }
 
-    // Update or add email account atomically
+    console.log("Checking if email account already exists...");
     const updateResult = await Company.findOneAndUpdate(
-      { _id: companyId, "emailAccounts.email": email }, // Find company and matching email account
+      { _id: companyId, "emailAccounts.email": email },
       {
         $set: {
-          "emailAccounts.$.name": userInfo.data.name || "Unknown",
-          "emailAccounts.$.host": "smtp.gmail.com", // Correct SMTP host
+          "emailAccounts.$.name": userName,
+          "emailAccounts.$.host": "smtp.gmail.com",
           "emailAccounts.$.secure": true,
           "emailAccounts.$.provider": "gmail",
           "emailAccounts.$.oauth.accessToken": tokens.access_token,
@@ -189,26 +214,27 @@ export const handleGoogleCallback = async (
             : null,
         },
       },
-      { new: true } // Return updated document
+      { new: true }
     );
 
     if (updateResult) {
-      // Existing account was updated
+      console.log("Updated existing email account:", email);
+
       res.status(200).json({
         message: "OAuth2 account updated successfully",
         emailAccount: {
           email,
           accountId: updateResult.emailAccounts.find(
-            (acc: any ) => acc.email === email
+            (acc: any) => acc.email === email
           )?._id,
         },
       });
       return;
     }
 
-    // If no existing account, add a new one
+    console.log("Adding new email account...");
     const newEmailAccount = {
-      name: userInfo.data.name || "Unknown",
+      name: userName,
       email,
       host: "smtp.gmail.com",
       secure: true,
@@ -226,22 +252,24 @@ export const handleGoogleCallback = async (
       { new: true }
     );
 
-    console.log("New email account added:", newEmailAccount);
+    console.log("New email account added successfully:", newEmailAccount);
 
-
-    res.redirect(`${process.env.FRONTEND_URL}/apps/settings`);
+    const redirectUrl = `${process.env.FRONTEND_URL}/apps/settings`;
+    console.log("Redirecting user to:", redirectUrl);
+    res.redirect(redirectUrl);
   } catch (error: any) {
-    console.error("Google callback error:", error); // Log for debugging
+    console.error("Google callback error:", error);
     console.log("Error message:", error.message);
-    res
-      .status(500)
-      .json({
-        message: "Failed to handle Google callback",
-        error: error.message,
-      });
+
+    res.status(500).json({
+      message: "Failed to handle Google callback",
+      error: error.message,
+    });
+
     next(error);
   }
 };
+
 
 // Endpoint to handle Outlook OAuth2 callback
 // Example route: GET /auth/outlook/callback
