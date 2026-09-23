@@ -27,7 +27,7 @@ export const login = async(req:any,res:any)=>{
         }else{
             if(admin.email === email && admin.password === password){
                 const token = jwt.sign(
-                  { id: admin._id, role: "superadmin" },
+                  { id: admin._id, role: "superAdmin" },
                   process.env.VITE_JWT_SECRET!
                 );
             return res.status(200).json({ message: "Login successful", token });

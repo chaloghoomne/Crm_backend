@@ -2,12 +2,18 @@ import Transaction from "../../models/Transaction";
 import Razorpay from "razorpay";
 import dotenv from "dotenv";
 
-dotenv.config(); 
+dotenv.config();
 
-let instance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_SECRET,  // Correct env variable
-});
+const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
+const razorpaySecret = process.env.RAZORPAY_SECRET;
+
+const instance =
+  razorpayKeyId && razorpaySecret
+    ? new Razorpay({
+        key_id: razorpayKeyId,
+        key_secret: razorpaySecret,
+      })
+    : null;
 
 // console.log(process.env.RAZORPAY_KEY_ID,process.env.RAZORPAY_SECRET)
 
@@ -15,6 +21,10 @@ export const leadPayment = async (req: any, res: any) => {
   try {
     const { leadId, amount } = req.body;
     // console.log(req.body);
+    if (!instance) {
+      return res.status(503).json({ message: "Razorpay is not configured" });
+    }
+
     if (!leadId || !amount) {
       return res.status(400).json({ message: "leadId and amount are required" });
     }
